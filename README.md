@@ -6,8 +6,6 @@
     | |_) | (_) | (_) | |_
     |_.__/ \___/ \___/ \__|
 ```
-#### Fast and Reliable Server Manager for Laravel, Nginx and MySQL
-
 Boot is a fast way of managing web servers based with Laravel, Nginx and MySQL. It simplifies adding new hosts, by automatically set all the necessary configurations.
 
 Designed for development and production servers. Tested on Ubuntu 16+.
