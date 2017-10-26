@@ -95,12 +95,12 @@ install_site()
 
 create_env_file()
 {
-    ENV="$DIR/scripts/stubs/.env"
+    ENV="$DIR/stubs/.env"
 
     cp "$ENV" $HOST_PATH_FULL/.env 2> /dev/null
 
     # Replace .env variables
-    # sed -e 's/^APP_URL=.*/APP_URL=${APP_URL}/' -e 's/^DB_DATABASE=.*/DB_DATABASE=${DB_NAME}/' -e 's/^DB_USERNAME=.*/DB_USERNAME=${DB_USERNAME}/' -e 's/^DB_PASSWORD=.*/DB_PASSWORD=${DB_PASSWORD}' > $HOST_PATH_FULL/.env
+    # echo sed -e 's/^APP_URL=.*/APP_URL=${APP_URL}/' -e 's/^DB_DATABASE=.*/DB_DATABASE=${DB_NAME}/' -e 's/^DB_USERNAME=.*/DB_USERNAME=${DB_USERNAME}/' -e 's/^DB_PASSWORD=.*/DB_PASSWORD=${DB_PASSWORD}/' $ENV > $HOST_PATH_FULL/.env
 
     # sed 's/^aaa=.*/aaa=xxx/'
 }

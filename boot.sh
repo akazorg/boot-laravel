@@ -38,7 +38,7 @@ tabs 4
 # Defaults
 #######################################
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-DB_NAME=
+# DB_NAME=
 # DB_USER="boot"  # Will append the db name: "database_boot"
 # HOST_PATH="/var/www"
 # HOST_TYPE="laravel"
@@ -53,7 +53,7 @@ NGINX_RELOAD_ON_CHANGE=true
 . $DIR/inc/messages.sh
 
 # Load variables
-while read line; do export "$line";
+while read line; do export "$line"; echo "$line";
 done < $DIR/boot.env
 
 
@@ -107,7 +107,7 @@ confirm_host_settings() {
 }
 
 save_host_config() {
-    cat > $DIR/hosts/$HOST_NAME.cnf << EOF
+cat > $DIR/hosts/$HOST_NAME.cnf << EOF
 date_added=$(date)
 host_name=$HOST_NAME
 host_path=$HOST_PATH/$HOST_NAME
