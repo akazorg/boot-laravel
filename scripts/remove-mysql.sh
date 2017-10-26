@@ -4,7 +4,7 @@ BIN_MYSQL=$(which mysql)
 
 DB_HOST='localhost'
 DB_NAME=$1
-DB_USER=$2
+DB_USERNAME=$2
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
@@ -16,8 +16,7 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 #############
 remove_db()
 {
-    # SQL1="REVOKE ALL PRIVILEGES, GRANT OPTION FROM '${DB_USER}'@'${DB_HOST}';"
-    SQL2="DROP USER '${DB_USER}'@'${DB_HOST}';"
+    SQL2="DROP USER '${DB_USERNAME}'@'${DB_HOST}';"
     SQL3="DROP DATABASE ${DB_NAME};"
     SQL="${SQL2}${SQL3}"
 

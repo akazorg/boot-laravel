@@ -30,31 +30,30 @@
 # - https://github.com/pyghassen/nginx_modsite
 # - Laravel Homestead provisioning scripts
 
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
 # tab width
 tabs 4
 # clear
-
-##########
-# Defaults
-#######################################
-DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-# DB_NAME=
-# DB_USER="boot"  # Will append the db name: "database_boot"
-# HOST_PATH="/var/www"
-# HOST_TYPE="laravel"
-HOST_NAME="$2"
-NGINX_CONF_FILE="$(awk -F= -v RS=' ' '/conf-path/ {print $2}' <<< $(nginx -V 2>&1))"
-NGINX_CONF_DIR="${NGINX_CONF_FILE%/*}"
-NGINX_SITES_AVAILABLE="$NGINX_CONF_DIR/sites-available"
-NGINX_SITES_ENABLED="$NGINX_CONF_DIR/sites-enabled"
-NGINX_RELOAD_ON_CHANGE=true
 
 # Include common scripts
 . $DIR/inc/messages.sh
 
 # Load variables
-while read line; do export "$line"; echo "$line";
+while read line; do export "$line";
 done < $DIR/boot.env
+
+
+##########
+# Defaults
+#######################################
+HOST_NAME="$2"
+HOST_PATH_FULL="$HOST_PATH/$HOST_NAME"
+NGINX_CONF_FILE="$(awk -F= -v RS=' ' '/conf-path/ {print $2}' <<< $(nginx -V 2>&1))"
+NGINX_CONF_DIR="${NGINX_CONF_FILE%/*}"
+NGINX_SITES_AVAILABLE="$NGINX_CONF_DIR/sites-available"
+NGINX_SITES_ENABLED="$NGINX_CONF_DIR/sites-enabled"
+NGINX_RELOAD_ON_CHANGE=true
 
 
 ###########
@@ -78,9 +77,9 @@ load_host() {
     name=${name//[^a-zA-Z0-9_]/}        # remove non alphanumeric or underscores
     name=`echo -n $name | tr A-Z a-z`   # make lowercase
 
-    DB_NAME=$name                   # DB Name Sanitized
-    DB_USER="$name"_"$DB_USER"      # DB Username
-    DB_USER_PASS=`pwgen -s 12 1`    # DB Password
+    DB_NAME=$name                       # DB Name Sanitized
+    DB_USERNAME="$name"_"$DB_USERNAME"  # DB Username
+    DB_PASSWORD=`pwgen -s 12 1`         # DB Password
 }
 
 confirm_host_settings() {
@@ -89,14 +88,14 @@ confirm_host_settings() {
     echo "➜ Nginx"
     echo "+----------------------------------------"
     echo "| Host : $HOST_NAME"
-    echo "| Path : $HOST_PATH/$HOST_NAME"
+    echo "| Path : $HOST_PATH_FULL"
     echo "+----------------------------------------"
     echo " "
     echo "➜ MySQL DB"
     echo "+----------------------------------------"
     echo "| Name : $DB_NAME"
-    echo "| User : $DB_USER"
-    echo "| Pass : $DB_USER_PASS"
+    echo "| User : $DB_USERNAME"
+    echo "| Pass : $DB_PASSWORD"
     echo "+----------------------------------------"
     echo ""
     read -p "➜ Proceed with create? (Y/n): " confirm
@@ -110,12 +109,12 @@ save_host_config() {
 cat > $DIR/hosts/$HOST_NAME.cnf << EOF
 date_added=$(date)
 host_name=$HOST_NAME
-host_path=$HOST_PATH/$HOST_NAME
+host_path=$HOST_PATH_FULL
 database_name=$DB_NAME
-database_user=$DB_USER
-database_pass=$DB_USER_PASS
+database_user=$DB_USERNAME
+database_pass=$DB_PASSWORD
 EOF
-    echo -e "\nProject details saved at $DIR/hosts/$HOST_NAME.cnf\n"
+    echo -e "\nConfig saved at $DIR/hosts/$HOST_NAME.cnf\n"
     echo -e "Build something great: http://$HOST_NAME\n"
 }
 
@@ -194,6 +193,7 @@ ngx_add_host() {
             HOST_TYPE="$1"
             HOST_NAME="$2";;
     esac
+    HOST_PATH_FULL="$HOST_PATH/$HOST_NAME"
 
     load_host
 
@@ -204,13 +204,16 @@ ngx_add_host() {
     confirm_host_settings
 
     # Create Mysql database, User and assign permission
-    bash $DIR/scripts/create-mysql.sh "$DB_NAME" "$DB_USER" "$DB_USER_PASS"
+    bash $DIR/scripts/create-mysql.sh "$DB_NAME" "$DB_USERNAME" "$DB_PASSWORD"
 
     # Create host
     case "$HOST_TYPE" in
         site) bash $DIR/scripts/create-site.sh "$HOST_NAME" "$HOST_PATH" "$NGINX_CONF_DIR";;
         laravel) bash $DIR/scripts/create-laravel.sh "$HOST_NAME" "$HOST_PATH" "$NGINX_CONF_DIR";;
     esac
+
+    # Update .env file variables
+    sed -e "s/^APP_URL=.*/APP_URL=http:\/\/${HOST_NAME}/" -e "s/^DB_DATABASE=.*/DB_DATABASE=${DB_NAME}/" -e "s/^DB_USERNAME=.*/DB_USERNAME=${DB_USERNAME}/" -e "s/^DB_PASSWORD=.*/DB_PASSWORD=${DB_PASSWORD}/" $HOST_PATH_FULL/.env > $HOST_PATH_FULL/_tmp_env && mv $HOST_PATH_FULL/_tmp_env "$HOST_PATH_FULL/.env"
 
     # Create /etc/hosts
     bash $DIR/scripts/hosts-etc.sh "add" "$HOST_NAME" "$HOST_IP"
@@ -235,7 +238,7 @@ ngx_remove_host() {
     bash $DIR/scripts/remove-host.sh "$HOST_PATH" "$HOST_NAME" "$NGINX_CONF_DIR"
 
     # Remove database
-    bash $DIR/scripts/remove-mysql.sh "$DB_NAME" "$DB_USER"
+    bash $DIR/scripts/remove-mysql.sh "$DB_NAME" "$DB_USERNAME"
 
     # Update hosts
     bash $DIR/scripts/hosts-etc.sh "remove" "$HOST_NAME" "$HOST_IP"

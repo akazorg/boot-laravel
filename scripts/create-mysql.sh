@@ -11,8 +11,8 @@ DEBUG=0 # 1|0
 
 DB_HOST='localhost'
 DB_NAME=$1
-DB_USER=$2
-DB_PASS=$3;
+DB_USERNAME=$2
+DB_PASSWORD=$3;
 
 BIN_MYSQL=$(which mysql)
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
@@ -26,7 +26,7 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 create_db()
 {
     SQL1="CREATE DATABASE IF NOT EXISTS ${DB_NAME} DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_unicode_ci;"
-    SQL2="GRANT ALL ON ${DB_NAME}.* TO '${DB_USER}'@'$DB_HOST' IDENTIFIED BY '${DB_PASS}';"
+    SQL2="GRANT ALL ON ${DB_NAME}.* TO '${DB_USERNAME}'@'$DB_HOST' IDENTIFIED BY '${DB_PASSWORD}';"
     SQL3="FLUSH PRIVILEGES;"
     SQL="${SQL1}${SQL2}${SQL3}"
 

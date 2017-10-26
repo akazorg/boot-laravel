@@ -91,18 +91,9 @@ setup_nginx()
 install_site()
 {
     echo "${HOST_NAME} homepage" > "$HOST_PATH_FULL/public/index.html"
-}
 
-create_env_file()
-{
-    ENV="$DIR/stubs/.env"
-
-    cp "$ENV" $HOST_PATH_FULL/.env 2> /dev/null
-
-    # Replace .env variables
-    # echo sed -e 's/^APP_URL=.*/APP_URL=${APP_URL}/' -e 's/^DB_DATABASE=.*/DB_DATABASE=${DB_NAME}/' -e 's/^DB_USERNAME=.*/DB_USERNAME=${DB_USERNAME}/' -e 's/^DB_PASSWORD=.*/DB_PASSWORD=${DB_PASSWORD}/' $ENV > $HOST_PATH_FULL/.env
-
-    # sed 's/^aaa=.*/aaa=xxx/'
+    # Create .env file
+    cp "$DIR/stubs/.env" $HOST_PATH_FULL/.env 2> /dev/null
 }
 
 grant_permissions()
@@ -122,7 +113,6 @@ grant_permissions()
 provision
 setup_nginx
 install_site
-create_env_file
 grant_permissions
 
 _success "Site installed"
