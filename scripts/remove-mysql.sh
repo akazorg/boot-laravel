@@ -3,8 +3,9 @@
 BIN_MYSQL=$(which mysql)
 
 DB_HOST='localhost'
-DB_NAME=$1
-DB_USERNAME=$2
+DB_ADD_DEL=$1
+DB_NAME=$2
+DB_USERNAME=$3
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
@@ -16,9 +17,15 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 #############
 remove_db()
 {
+    SQL1="DROP DATABASE ${DB_NAME};"
     SQL2="DROP USER '${DB_USERNAME}'@'${DB_HOST}';"
-    SQL3="DROP DATABASE ${DB_NAME};"
-    SQL="${SQL2}${SQL3}"
+    SQL=""
+
+    if [ "$DB_ADD_DEL" = true ]; then
+        SQL="${SQL1}"
+    fi
+
+    SQL="${SQL}${SQL2}"
 
     if [ -f ~/.my.cnf ]; then
         $BIN_MYSQL -e "$SQL"

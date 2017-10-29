@@ -204,19 +204,23 @@ ngx_add_host() {
     confirm_host_settings
 
     # Create Mysql database, User and assign permission
-    bash $DIR/scripts/create-mysql.sh "$DB_NAME" "$DB_USERNAME" "$DB_PASSWORD"
+    bash $DIR/scripts/create-mysql.sh "$DB_ADD_DEL" "$DB_NAME" "$DB_USERNAME" "$DB_PASSWORD"
 
     # Create host
-    case "$HOST_TYPE" in
-        site) bash $DIR/scripts/create-site.sh "$HOST_NAME" "$HOST_PATH" "$NGINX_CONF_DIR";;
-        laravel) bash $DIR/scripts/create-laravel.sh "$HOST_NAME" "$HOST_PATH" "$NGINX_CONF_DIR";;
-    esac
+    if [ "$HOST_FILES_ADD_DEL" ]; then
+        case "$HOST_TYPE" in
+            site) bash $DIR/scripts/create-site.sh "$HOST_NAME" "$HOST_PATH" "$NGINX_CONF_DIR";;
+            laravel) bash $DIR/scripts/create-laravel.sh "$HOST_NAME" "$HOST_PATH" "$NGINX_CONF_DIR";;
+        esac
+    fi
 
     # Update .env file variables
     sed -e "s/^APP_URL=.*/APP_URL=http:\/\/${HOST_NAME}/" -e "s/^DB_DATABASE=.*/DB_DATABASE=${DB_NAME}/" -e "s/^DB_USERNAME=.*/DB_USERNAME=${DB_USERNAME}/" -e "s/^DB_PASSWORD=.*/DB_PASSWORD=${DB_PASSWORD}/" $HOST_PATH_FULL/.env > $HOST_PATH_FULL/_tmp_env && mv $HOST_PATH_FULL/_tmp_env "$HOST_PATH_FULL/.env"
 
     # Create /etc/hosts
-    bash $DIR/scripts/hosts-etc.sh "add" "$HOST_NAME" "$HOST_IP"
+    if [ "$HOST_ETC_ADD_DEL" ]; then
+        bash $DIR/scripts/hosts-etc.sh "add" "$HOST_NAME" "$HOST_IP"
+    fi
 
     ngx_reload
     save_host_config
@@ -232,16 +236,21 @@ ngx_remove_host() {
     [[ ! -e "$NGINX_SITES_AVAILABLE/$HOST_NAME" ]] &&
         _err "$HOST_NAME site is not configured."
 
+    # Load host variables
     load_host
 
     # Remove host
-    bash $DIR/scripts/remove-host.sh "$HOST_PATH" "$HOST_NAME" "$NGINX_CONF_DIR"
+    if [ "$HOST_FILES_ADD_DEL" ]; then
+        bash $DIR/scripts/remove-host.sh "$HOST_PATH" "$HOST_NAME" "$NGINX_CONF_DIR"
+    fi
 
     # Remove database
-    bash $DIR/scripts/remove-mysql.sh "$DB_NAME" "$DB_USERNAME"
+    bash $DIR/scripts/create-mysql.sh "$DB_ADD_DEL" "$DB_NAME" "$DB_USERNAME"
 
     # Update hosts
-    bash $DIR/scripts/hosts-etc.sh "remove" "$HOST_NAME" "$HOST_IP"
+    if [ "$HOST_ETC_ADD_DEL" ]; then
+        bash $DIR/scripts/hosts-etc.sh "remove" "$HOST_NAME" "$HOST_IP"
+    fi
 
     ngx_reload
     _success "Host removed"
